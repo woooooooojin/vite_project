@@ -11,6 +11,8 @@ node_modules
 dist
 dist-ssr
 *.local
+firebase.ts 
+#나중에 보안적용해서 풀기
 
 # Editor directories and files
 .vscode/*

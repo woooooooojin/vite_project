@@ -4,35 +4,43 @@ import Home from "./routes/home"
 import Profile from "./routes/profile"
 import Login from "./routes/login"
 import CreateAccount from "./routes/createAccount"
-import { createGlobalStyle } from "styled-components"
+import { createGlobalStyle, styled } from "styled-components"
 import reset from "styled-reset"
+import { useEffect, useState } from "react"
+import Loading from "./components/loading"
+import { auth } from "./firebase"
+import ProtectedRoute from "./components/protected-route"
 
+
+const Wrapper = styled.div`
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+`
 
 const router = createBrowserRouter([
   {
-    path :'/',
-    element : <Layout/>,
-    children : [
+    path: "/",
+    element: <ProtectedRoute><Layout /></ProtectedRoute>,
+    children: [
       {
-        path:'',
-        element : <Home/>
+        path: "",
+        element: <Home/>,
       },
       {
-        path:'profile',
-        element :<Profile/>
-      }
-     
-  ]
-  },
-
-  {
-    path:'/login',
-    element:<Login/>
+        path: "profile",
+        element: <Profile/>,
+      },
+    ],
   },
   {
-    path:'/create-account',
-    element:<CreateAccount/>
-  }
+    path: "/login",
+    element: <Login />,
+  },
+  {
+    path: "/create-account",
+    element: <CreateAccount />,
+  },
 ])
 
 const GlobalStyled = createGlobalStyle`
@@ -53,10 +61,20 @@ const GlobalStyled = createGlobalStyle`
 
 function App() {
 
+  const [isLoading, setIsLoading] = useState(true)
+  const init = async () => {
+    await auth.authStateReady(); //인증상태가 준비되었는지 기다림 firebase가 쿠키와 토큰을 읽고 백엔드와 소통해서 로그인여부 확인
+    setIsLoading(false)
+
+  }
+  useEffect(() => {init()},[])
+
   return (
     <>
+    <Wrapper>
       <GlobalStyled/>
-      <RouterProvider router={router}/>
+      {isLoading ? <Loading/> : <RouterProvider router={router}/>}
+    </Wrapper>
     </>
   )
 }
