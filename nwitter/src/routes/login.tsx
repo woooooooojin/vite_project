@@ -65,6 +65,7 @@ export default function Login() {
      alert('이메일에서 패스워드 초기화를 할 수 있습니다.')
 
     }catch(e){
+      alert('가입하신 이메일을 확인해주세요.')
       console.log(e)
     }
   }
