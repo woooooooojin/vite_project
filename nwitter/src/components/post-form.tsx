@@ -1,5 +1,7 @@
+import { addDoc, collection } from "firebase/firestore"
 import { useState } from "react"
 import { styled } from "styled-components"
+import { auth, db } from "../firebase"
 
 
 const Form = styled.form`
@@ -55,6 +57,8 @@ const SubmitBtn = styled.input`
     }
 `
 
+
+
 export default function PostForm() {
 
     const [isLoding, setIsLoading] = useState(false);
@@ -71,9 +75,30 @@ export default function PostForm() {
         }
     } //인풋 파일이 변경될때마다  파일의 배열을 받음  여러파일이 올라가지않게 하나만 올림,, 파일이 존재하고 하나만 있는경우만 setfile에 저장한다
 
+    const onSubmit = async (e:React.ChangeEvent<HTMLFormElement>)=>{
+        e.preventDefault()
+        const user = auth.currentUser
+        if(!user || isLoding || post === '' || post.length > 200 ) return // 이 경우에는 함수를 종료
+
+        try{
+            setIsLoading(true)
+            await addDoc(collection(db,'posts'), {
+                post,
+                createdAt: Date.now(),
+                username: user.displayName || "anonymous",
+                userId: user.uid,
+
+            })
+        }catch(e){
+            console.log(e)
+        }finally{
+            setIsLoading(false)
+        }
+
+    }
   return (
     <>
-        <Form>
+        <Form onSubmit={onSubmit}>
             <TextArea rows={5} maxLength={200} onChange={onChange} value={post} placeholder="내용을 입력해 주세요."></TextArea>
             <AttachFileBtn htmlFor="file">{file ? 'added photo' : 'add photo'}</AttachFileBtn>
             <AttachFileInput onChange={onFileChange} type="file" id="file" accept="image/*"/>
