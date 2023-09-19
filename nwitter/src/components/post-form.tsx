@@ -77,7 +77,7 @@ export default function PostForm() {
 
     const onSubmit = async (e:React.ChangeEvent<HTMLFormElement>)=>{
         e.preventDefault()
-        const user = auth.currentUser
+        const user = auth.currentUser //사용자정보
         if(!user || isLoding || post === '' || post.length > 200 ) return // 이 경우에는 함수를 종료
 
         try{
