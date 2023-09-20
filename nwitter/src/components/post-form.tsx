@@ -83,7 +83,7 @@ export default function PostForm() {
 
         try{
             setIsLoading(true)
-            const doc = await addDoc(collection(db,'posts'), {
+            const doc = await addDoc(collection(db,'posts'), { //addDoc > 파일을 업로드할 document를 생성한다
                 post,
                 createdAt: Date.now(),
                 username: user.displayName || "anonymous",
@@ -91,10 +91,10 @@ export default function PostForm() {
 
             })
             if(file && file.size < 1024 ** 2){//파일이 존재하거나 파일이 1메가가 넘지 않는다면
-                const locationRef = ref(storage,`posts/${user.uid}-${user.displayName}/${doc.id}`) //storage에 저장하는 경로
-                const result = await uploadBytes(locationRef,file)
-                const url = await getDownloadURL(result.ref) //업로드한 사진의 url
-                await updateDoc(doc,{
+                const locationRef = ref(storage,`posts/${user.uid}-${user.displayName}/${doc.id}`) //ref >> 파일을 업로드할 위치 지정 storage에 저장하는 경로
+                const result = await uploadBytes(locationRef,file) //uploadBytes 파일을 업로드한 후 결과에 대한 정보를 담은 promise를 반환함
+                const url = await getDownloadURL(result.ref) //업로드한 사진의 url을 uploadBytes에서 반환한 promise에서 추출가능
+                await updateDoc(doc,{ //updateDoc매서드를 통해 doc에 다운로드 링크를 첨부할 수 있다,,
                     photo:url
                 })
             }
