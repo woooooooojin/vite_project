@@ -1,7 +1,8 @@
-import { addDoc, collection } from "firebase/firestore"
+import { addDoc, collection, updateDoc } from "firebase/firestore"
 import { useState } from "react"
 import { styled } from "styled-components"
-import { auth, db } from "../firebase"
+import { auth, db, storage } from "../firebase"
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage"
 
 
 const Form = styled.form`
@@ -82,13 +83,23 @@ export default function PostForm() {
 
         try{
             setIsLoading(true)
-            await addDoc(collection(db,'posts'), {
+            const doc = await addDoc(collection(db,'posts'), {
                 post,
                 createdAt: Date.now(),
                 username: user.displayName || "anonymous",
                 userId: user.uid,
 
             })
+            if(file && file.size < 1024 ** 2){//파일이 존재하거나 파일이 1메가가 넘지 않는다면
+                const locationRef = ref(storage,`posts/${user.uid}-${user.displayName}/${doc.id}`) //storage에 저장하는 경로
+                const result = await uploadBytes(locationRef,file)
+                const url = await getDownloadURL(result.ref) //업로드한 사진의 url
+                await updateDoc(doc,{
+                    photo:url
+                })
+            }
+            setPost("")
+            setFile(null)
         }catch(e){
             console.log(e)
         }finally{
@@ -99,7 +110,7 @@ export default function PostForm() {
   return (
     <>
         <Form onSubmit={onSubmit}>
-            <TextArea rows={5} maxLength={200} onChange={onChange} value={post} placeholder="내용을 입력해 주세요."></TextArea>
+            <TextArea required rows={5} maxLength={200} onChange={onChange} value={post} placeholder="내용을 입력해 주세요."></TextArea>
             <AttachFileBtn htmlFor="file">{file ? 'added photo' : 'add photo'}</AttachFileBtn>
             <AttachFileInput onChange={onFileChange} type="file" id="file" accept="image/*"/>
             <SubmitBtn type="submit" value={isLoding ? "posting..." : "post"}></SubmitBtn>
