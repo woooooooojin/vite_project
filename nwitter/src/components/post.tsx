@@ -1,8 +1,9 @@
 import { styled } from "styled-components";
 import { IPost } from "./timeline";
 import { auth, db, storage } from "../firebase";
-import { deleteDoc, doc } from "firebase/firestore";
-import { deleteObject, ref } from "firebase/storage";
+import { deleteDoc, doc, updateDoc } from "firebase/firestore";
+import { deleteObject, getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { useState } from "react";
 
 
 const Wrapper = styled.div`
@@ -41,10 +42,35 @@ const DeleteButton = styled.button`
     cursor: pointer;
 `
 
+const EditButton = styled.button`
+    background-color: tomato;
+    color: #fff;
+    font-weight: 600;
+    border: 0;
+    font-size: 12px;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-left: 10px;
+`
+const TextArea = styled.textarea`
+    
+`
+const ChangePhotoInput = styled.input`
+  width: 100%;
+  height: 100%;
+  background-color: white;
+`;
 
 export default function Post({username, photo, post, userId, id}:IPost) {
 
     const user = auth.currentUser;
+    const [editMode, setEditMode] = useState(false)
+    const [editPost, setEditPost] = useState(post)
+    const [file, setFile] = useState<File | null>(null);
+
+
+
     const onDelete = async()=>{
         const ok = confirm('정말 삭제하겠습니까 ?') 
         if(!ok || user?.uid !== userId) return;
@@ -64,16 +90,78 @@ export default function Post({username, photo, post, userId, id}:IPost) {
         }
     }
 
+    const onEdit = async()=>{
+        setEditMode((prev) => !prev)
+        if(!editMode) return;
+    
+        try{
+            if(file !== null){
+                //기존 이미지 삭제
+                const photoRef = ref(storage,`posts/${user?.uid}/${id}`)
+                await deleteObject(photoRef)
+                //새로 업데이트
+                const locationRef = ref(storage,`posts/${user?.uid}/${id}`)
+                const result = await uploadBytes(locationRef,file)
+                const imgUrl = await getDownloadURL(result.ref)
+                updateDoc(doc(db,"posts",id),{
+                    post : editPost,
+                    imgUrl,
+                });
+                
+            }else{
+                //글자 포스팅만 업로드
+                updateDoc(doc(db,"posts",id),{
+                    post : editPost,
+                })
+            }
+        }catch(e){
+            console.log(e)
+        }finally{
+            setEditMode(false)
+            setFile(null)
+        }
+    }
+
+    const onTextChange = (e:React.ChangeEvent<HTMLTextAreaElement>)=>{
+        const {
+            target : {value},
+        } = e
+
+        setEditPost(value)
+    }
+
+    const onFileChange = (e:React.ChangeEvent<HTMLInputElement>)=>{
+        const {files} = e.target
+        if(files && files.length === 1){
+            if (files[0].size > 1000000){
+                e.target.value = ""
+                return alert("Photo size too big! you can upload under 1MB");
+            }
+            setFile(files[0]);
+        }
+    }
+
   return (
     <>
         <Wrapper>
             <Column>
                 <Username>{username}</Username>
-                <Payload>{post}</Payload>
-                {/* user의 아이디와 userId가 같은경우 버튼이 보임 */}
-                {user?.uid ===  userId ? <DeleteButton onClick={onDelete}>Delete</DeleteButton> : null} 
+                {editMode ? (<TextArea onChange={onTextChange} value={editPost}></TextArea>) : ( <Payload>{post}</Payload>)}
+                {user?.uid === userId ? <DeleteButton onClick={onDelete}>Delete</DeleteButton> : null} 
+                {user?.uid === userId ? <EditButton onClick={onEdit}>{editMode ? "Save" : "Edit"}</EditButton> : null}
             </Column>
-           <Column>{photo ? <Photo src = {photo}/>: null } </Column> 
+
+           <Column>
+          
+            {editMode ? (
+                <ChangePhotoInput
+                    onChange={onFileChange}
+                    id="file"
+                    accept="image/*"
+                    type="file"
+                />
+                ) : ( photo && <Photo src={photo} /> )}
+           </Column> 
             
 
         </Wrapper>
