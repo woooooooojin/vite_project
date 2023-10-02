@@ -1,8 +1,11 @@
 import { styled } from "styled-components"
-import { auth, storage } from "../firebase"
-import { useState } from "react"
+import { auth, db, storage } from "../firebase"
+import { useEffect, useState } from "react"
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage"
 import { updateProfile } from "firebase/auth"
+import { collection, getDoc, getDocs, limit, orderBy, query, where } from "firebase/firestore"
+import { IPost } from "../components/timeline"
+import Post from "../components/post"
 
 
 const Wrapper = styled.div`
@@ -36,10 +39,38 @@ const Name = styled.span`
   font-size: 22px;
 `
 
+const Posts = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+`
+
 export default function Profile() {
 
   const user = auth.currentUser
   const [avatar, setAvatar] = useState(user?.photoURL)
+  const [posts, setPosts] = useState<IPost[]>([])
+
+  const fetchPosts = async()=>{
+    const postQuery = query(
+      collection(db,"posts"),
+      where("userId","==",user?.uid), //userid 와 currenuser의 uid가 같은것을 필터링 
+      orderBy("createdAt","desc"),
+      limit(25)
+    )
+    const snapshot = await getDocs(postQuery)
+    const posts = snapshot.docs.map(doc=>{
+      const {post, createdAt, userId, username, photo} = doc.data();
+      return{
+          post, createdAt, userId, username, photo,
+          id:doc.id
+      }
+    })
+    setPosts(posts)
+  }
+  useEffect(()=>{fetchPosts()},[])
+
 
   const onAvatarChange = async (e:React.ChangeEvent<HTMLInputElement>) =>{
     const {files} = e.target
@@ -69,7 +100,7 @@ export default function Profile() {
         <Name>
           {user?.displayName ? user.displayName : "anonymous" }
         </Name>
-
+        <Posts>{posts.map(post => <Post key={post.id} {...post}/>)}</Posts>
       </Wrapper>
     </>
   )

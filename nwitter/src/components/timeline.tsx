@@ -34,11 +34,11 @@ export default function TimeLine() {
         )
     //     const snapshot = await getDocs(postQuery)
     //     const posting =  snapshot.docs.map((doc) => {
-    //         const {post, createdAt, userId, username, photo} = doc.data();
-    //         return{
-    //             post, createdAt, userId, username, photo,
-    //             id:doc.id
-    //         }
+            // const {post, createdAt, userId, username, photo} = doc.data();
+            // return{
+            //     post, createdAt, userId, username, photo,
+            //     id:doc.id
+            // }
     //    })
          unsubscribe = await onSnapshot(postQuery, (snapshot) => { 
             //onSnapshot은 특정 문서나 컬렉션, 쿼리 이벤트를 감지하여 realtime으로 이벤트콜백 함수를 실행해줄 수있다. 이를통해 db에 들어온 쿼리를 새로고침없이 화면에 반영할 수있다. useEffect의 cleanup 기능을 이용하여 컴포넌트가 언마운트될 때 onSnapshot이 실행되지 않도록 할수 있다.
