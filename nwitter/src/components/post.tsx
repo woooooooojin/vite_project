@@ -54,12 +54,12 @@ const EditButton = styled.button`
     margin-left: 10px;
 `
 const TextArea = styled.textarea`
-    
+    resize: none;
+    display: block;
+    margin: 5px 0;
 `
 const ChangePhotoInput = styled.input`
   width: 100%;
-  height: 100%;
-  background-color: white;
 `;
 
 export default function Post({username, photo, post, userId, id}:IPost) {
