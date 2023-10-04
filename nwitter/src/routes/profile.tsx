@@ -151,8 +151,6 @@ export default function Profile() {
 
         <AvatarInput onChange={onAvatarChange} id="avatar" type='file' accept='image/*' />
 
-        <NameEdit onClick={onChangeNameClick}>{editMode ? "Save" : "Change Name"}</NameEdit>
-
         {editMode ? (
         <NameWrap>
           <NameInput onChange={onChangeName} type="text" value={name}></NameInput>
@@ -162,7 +160,7 @@ export default function Profile() {
           {user?.displayName ? user.displayName : "anonymous" }
         </Name>)}
 
-        
+        <NameEdit onClick={onChangeNameClick}>{editMode ? "Save" : "Change Name"}</NameEdit>
 
         
         
