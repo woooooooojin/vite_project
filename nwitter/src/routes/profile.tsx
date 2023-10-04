@@ -45,12 +45,38 @@ const Posts = styled.div`
   gap: 10px;
   width: 100%;
 `
+const NameEdit = styled.button`
+  padding: 5px;
+  border-radius: 5px;
+  border: 0;
+  background-color: tomato;
+  color: #fff;
+  cursor: pointer;
+  font-size: 12px;
+  margin-left: 5px;
+`
+const NameWrap = styled.div`
+ 
+  
+`
+const NameInput = styled.input`
+  background-color: black;
+  font-size: 16px;
+  text-align: center;
+  color: white;
+  border: 1px solid white;
+  border-radius: 15px;
+  outline: none;
+`
 
 export default function Profile() {
 
   const user = auth.currentUser
   const [avatar, setAvatar] = useState(user?.photoURL)
   const [posts, setPosts] = useState<IPost[]>([])
+  const [editMode, setEditMode] = useState(false)
+  const [name, setName] = useState(user?.displayName ?? "anonymous")
+
 
   const fetchPosts = async()=>{
     const postQuery = query(
@@ -87,6 +113,33 @@ export default function Profile() {
     }
   }
 
+
+  const onChangeNameClick = async()=>{
+
+    if(!user) return;
+    setEditMode((prev)=>!prev)
+    if(!editMode) return;
+
+    try{
+      await updateProfile(user,{
+        displayName : name,
+      })
+    }catch(e){
+      console.log(e)
+    }finally{
+      setEditMode(false)
+    }
+
+  }
+  
+
+  const onChangeName = (e:React.ChangeEvent<HTMLInputElement>)=>{
+
+    setName(e.target.value)
+
+  }
+  
+
   return (
     <>
       <Wrapper>
@@ -97,9 +150,22 @@ export default function Profile() {
         </AvatarUpload>
 
         <AvatarInput onChange={onAvatarChange} id="avatar" type='file' accept='image/*' />
-        <Name>
+
+        <NameEdit onClick={onChangeNameClick}>{editMode ? "Save" : "Change Name"}</NameEdit>
+
+        {editMode ? (
+        <NameWrap>
+          <NameInput onChange={onChangeName} type="text" value={name}></NameInput>
+          
+        </NameWrap>) : 
+        (<Name>
           {user?.displayName ? user.displayName : "anonymous" }
-        </Name>
+        </Name>)}
+
+        
+
+        
+        
         <Posts>{posts.map(post => <Post key={post.id} {...post}/>)}</Posts>
       </Wrapper>
     </>
